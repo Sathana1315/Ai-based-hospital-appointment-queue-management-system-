@@ -1,0 +1,2 @@
+# Q-Med Postman Collection
+This file is a placeholder for the Postman Collection JSON. In a production environment, you can export the OpenAPI specification from `http://localhost:8000/openapi.json` and import it directly into Postman to generate the entire collection automatically.
