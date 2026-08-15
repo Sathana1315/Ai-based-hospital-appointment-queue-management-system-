@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../context/WebSocketContext';
-import { LogOut, HeartPulse, Shield, User, Stethoscope, Bell, CheckCircle, Info, XCircle, AlertTriangle, X } from 'lucide-react';
+import { LogOut, Shield, User, Stethoscope, Bell, CheckCircle, Info, XCircle, AlertTriangle, X } from 'lucide-react';
 import axios from 'axios';
 import SearchBar from './SearchBar';
 
@@ -133,7 +133,7 @@ const Layout = ({ children }) => {
       }}>
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <HeartPulse size={28} className="glow-active" style={{ color: 'var(--color-accent)' }} />
+          <img src="/logo.png" alt="Q-Med Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} className="glow-active" />
           <div>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
               Q-<span className="text-gradient">Med</span>

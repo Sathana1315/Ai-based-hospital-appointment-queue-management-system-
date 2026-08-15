@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, UserPlus, HelpCircle, HeartPulse, MapPin } from 'lucide-react';
+import { LogIn, UserPlus, HelpCircle, MapPin } from 'lucide-react';
 
 const Login = () => {
   const { login, register, initGuest } = useAuth();
@@ -107,7 +107,7 @@ const Login = () => {
       }}>
         {/* Header Branding */}
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-          <HeartPulse size={42} style={{ color: 'var(--color-accent)' }} className="glow-active" />
+          <img src="/logo.png" alt="Q-Med Logo" style={{ width: 48, height: 48, objectFit: 'contain' }} className="glow-active" />
           <h2 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Welcome to Q-Med</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Hospital Appointment & Queue System</p>
         </div>
