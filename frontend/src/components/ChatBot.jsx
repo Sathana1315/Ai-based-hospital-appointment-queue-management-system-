@@ -108,16 +108,16 @@ const ChatBot = () => {
             height: 60,
             borderRadius: '50%',
             backgroundColor: 'var(--color-accent)',
-            border: 'none',
             color: '#fff',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             cursor: 'pointer',
+            border: 'none',
             boxShadow: '0 4px 20px rgba(6, 182, 212, 0.4)',
             transition: 'all 0.3s ease',
           }}
-          className="glow-active"
+          className="glow-active chatbot-fab"
         >
           <MessageSquare size={26} />
         </button>
@@ -125,7 +125,7 @@ const ChatBot = () => {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="glass-panel" style={{
+        <div className="glass-panel chatbot-panel" style={{
           width: 360,
           height: 480,
           display: 'flex',
