@@ -3,18 +3,24 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-// In production, use VITE_API_URL from environment; fallback to origin or localhost for local dev
+// In production, use VITE_API_BASE_URL or VITE_API_URL from environment
 const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
   if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
     return envUrl.trim().replace(/\/+$/, '');
   }
   // If running on localhost/127.0.0.1 in dev
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://127.0.0.1:8000';
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+    // If running on the deployed Render frontend, default directly to the deployed Render backend
+    if (window.location.hostname.includes('onrender.com')) {
+      return 'https://ai-based-hospital-appointment-queue-vgxx.onrender.com';
+    }
+    return window.location.origin;
   }
-  // Otherwise default to current origin (or same-host backend)
-  return typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000';
+  return 'https://ai-based-hospital-appointment-queue-vgxx.onrender.com';
 };
 
 const API_BASE_URL = getApiBaseUrl();

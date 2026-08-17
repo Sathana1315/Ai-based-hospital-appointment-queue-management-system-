@@ -32,9 +32,18 @@ app.add_middleware(AuditLoggingMiddleware)
 app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 app.add_middleware(SecurityHeadersMiddleware)
 
+ALLOWED_ORIGINS = [
+    "https://ai-based-hospital-appointment-queue.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

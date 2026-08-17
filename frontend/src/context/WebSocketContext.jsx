@@ -27,12 +27,10 @@ export const WebSocketProvider = ({ children }) => {
             const envWs = import.meta.env.VITE_WS_URL;
             if (envWs && typeof envWs === 'string' && envWs.trim().length > 0) {
                 wsUrl = `${envWs.trim().replace(/\/+$/, '')}${token ? `?token=${token}` : ''}`;
+            } else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                wsUrl = `ws://127.0.0.1:8000/ws${token ? `?token=${token}` : ''}`;
             } else {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                    ? '127.0.0.1:8000'
-                    : window.location.host;
-                wsUrl = `${protocol}//${host}/ws${token ? `?token=${token}` : ''}`;
+                wsUrl = `wss://ai-based-hospital-appointment-queue-vgxx.onrender.com/ws${token ? `?token=${token}` : ''}`;
             }
             
             ws = new WebSocket(wsUrl);
