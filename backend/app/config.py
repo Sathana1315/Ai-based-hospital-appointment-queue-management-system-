@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     DEMO_RECEPTIONIST_USERNAME: str = "receptionist"
     DEMO_ADMIN_USERNAME: str = "admin"
 
+    # Google OAuth Configuration
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
         extra="ignore"

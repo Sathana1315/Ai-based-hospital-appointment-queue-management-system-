@@ -15,4 +15,6 @@ python-jose
 faster-whisper
 websockets
 psutil
+google-auth
+google-auth-httplib2
  

@@ -50,6 +50,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (credential) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/google`, {
+        credential: credential,
+      });
+      const { access_token, role, username } = response.data;
+      localStorage.setItem('token', access_token);
+      setToken(access_token);
+      return { success: true, role };
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || 'Google login failed. Please try again.';
+      return { success: false, error: errorMsg };
+    }
+  };
+
   const register = async (userData) => {
     try {
       await axios.post(`${API_BASE_URL}/auth/register`, userData);
@@ -80,7 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, initGuest, logout, API_BASE_URL }}>
+    <AuthContext.Provider value={{ user, token, loading, login, googleLogin, register, initGuest, logout, API_BASE_URL }}>
       {children}
     </AuthContext.Provider>
   );
