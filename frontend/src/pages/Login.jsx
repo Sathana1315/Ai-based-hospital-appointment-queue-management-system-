@@ -52,8 +52,7 @@ const DEMO_ACCOUNTS = [
   }
 ];
 
-const DEFAULT_GOOGLE_CLIENT_ID = '1071394912570-4jgphlkqlkgi0umjoi5ikd3eti406kev.apps.googleusercontent.com';
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const Login = () => {
   const { login, googleLogin, register, initGuest } = useAuth();
@@ -62,85 +61,158 @@ const Login = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [quickLoadingRole, setQuickLoadingRole] = useState(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const googleBtnContainerRef = useRef(null);
 
-  // Google Sign-In callback
-  const handleGoogleCallback = useCallback(async (response) => {
-    if (!response || !response.credential) {
-      setError('Google authentication was cancelled or failed.');
+  // Process ID Token (credential) with backend
+  const handleGoogleCredential = useCallback(async (credential) => {
+    if (!credential) {
+      setError('No credential received from Google.');
       setGoogleLoading(false);
       return;
     }
     setError('');
     setGoogleLoading(true);
+
+    const timeoutId = setTimeout(() => {
+      setGoogleLoading(false);
+      setError('Google login timed out. Please check your connection and try again.');
+    }, 12000);
+
     try {
-      const result = await googleLogin(response.credential);
+      console.log('[Q-Med Auth] Sending Google credential to /auth/google...');
+      const result = await googleLogin(credential);
+      clearTimeout(timeoutId);
       if (!result.success) {
         setError(result.error || 'Google login failed.');
+      } else {
+        console.log('[Q-Med Auth] Google patient login successful.');
       }
-    } catch {
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('[Q-Med Auth] Google login exception:', err?.message);
       setError('Google login failed. Please try again.');
     } finally {
       setGoogleLoading(false);
     }
   }, [googleLogin]);
 
-  // Load and initialize Google Sign-In
+  // Load and initialize Google Identity Services
   useEffect(() => {
-    const initGSI = () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleCallback,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
-        } catch (e) {
-          console.warn('Google Identity initialization notice:', e);
+    if (!GOOGLE_CLIENT_ID) return;
+
+    let isMounted = true;
+
+    const initializeGSI = () => {
+      if (!window.google?.accounts?.id) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: (response) => {
+            if (isMounted && response?.credential) {
+              handleGoogleCredential(response.credential);
+            } else if (isMounted) {
+              setGoogleLoading(false);
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        // Render official hidden/styled Google button into container if present
+        if (googleBtnContainerRef.current) {
+          window.google.accounts.id.renderButton(
+            googleBtnContainerRef.current,
+            {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              width: 320,
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+            }
+          );
         }
+        console.log('[Q-Med Auth] Google Identity Services initialized successfully.');
+      } catch (e) {
+        console.warn('[Q-Med Auth] GSI init warning:', e);
       }
     };
 
     if (window.google?.accounts?.id) {
-      initGSI();
+      initializeGSI();
     } else {
-      // Check if script is already in document
       let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
       if (!script) {
         script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         script.defer = true;
+        script.onload = initializeGSI;
         document.head.appendChild(script);
+      } else {
+        script.addEventListener('load', initializeGSI);
       }
-      const timer = setInterval(() => {
+      const pollTimer = setInterval(() => {
         if (window.google?.accounts?.id) {
-          clearInterval(timer);
-          initGSI();
+          clearInterval(pollTimer);
+          initializeGSI();
         }
       }, 150);
-      return () => clearInterval(timer);
+      return () => {
+        isMounted = false;
+        clearInterval(pollTimer);
+      };
     }
-  }, [handleGoogleCallback]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [handleGoogleCredential, activeTab]);
 
   const handleGoogleClick = () => {
     setError('');
+
     if (!GOOGLE_CLIENT_ID) {
-      setError('Google Sign-In is not configured.');
+      setError('Google Client ID is not configured.');
       return;
     }
 
-    if (!window.google?.accounts?.id) {
-      setError('Google Sign-In service is initializing. Please try in a moment.');
+    if (!window.google?.accounts) {
+      setError('Google Sign-In service is loading. Please try again in a few seconds.');
       return;
     }
 
     setGoogleLoading(true);
 
+    // Timeout guard so loading spinner NEVER hangs permanently
+    const clickTimeout = setTimeout(() => {
+      setGoogleLoading(false);
+    }, 15000);
+
     try {
+      console.log('[Q-Med Auth] Initiating Google Sign-In...');
+
+      // 1. If hidden official rendered button exists, trigger its click
+      if (googleBtnContainerRef.current) {
+        const nativeBtn = googleBtnContainerRef.current.querySelector('div[role="button"]') ||
+                          googleBtnContainerRef.current.querySelector('iframe') ||
+                          googleBtnContainerRef.current.querySelector('button');
+        if (nativeBtn) {
+          clearTimeout(clickTimeout);
+          nativeBtn.click();
+          // Reset loading state after a moment if popup opened
+          setTimeout(() => setGoogleLoading(false), 2000);
+          return;
+        }
+      }
+
+      // 2. Use prompt with notification handling
       window.google.accounts.id.prompt((notification) => {
+        clearTimeout(clickTimeout);
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // If One-Tap prompt is suppressed or not displayed, use the OAuth2 token/code client popup
+          console.log('[Q-Med Auth] One-tap skipped/not displayed. Opening Google OAuth popup...');
+          // Use OAuth2 token client popup
           if (window.google?.accounts?.oauth2) {
             const tokenClient = window.google.accounts.oauth2.initTokenClient({
               client_id: GOOGLE_CLIENT_ID,
@@ -151,41 +223,40 @@ const Login = () => {
                   setGoogleLoading(false);
                   return;
                 }
-                // When we have access_token from popup, fetch user info or use credential
                 if (tokenResponse.access_token) {
                   try {
-                    // Fetch user info from Google
                     const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                       headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
                     });
-                    const info = await res.json();
-                    if (info.email) {
-                      // Pass credential / token or trigger server login
-                      const result = await googleLogin(tokenResponse.access_token);
-                      if (!result.success) {
-                        setError(result.error);
-                      }
+                    const userInfo = await res.json();
+                    if (userInfo?.email) {
+                      // Pass access_token to backend
+                      await handleGoogleCredential(tokenResponse.access_token);
+                    } else {
+                      setError('Could not retrieve verified email from Google.');
                     }
-                  } catch {
-                    setError('Failed to retrieve Google profile.');
+                  } catch (e) {
+                    setError('Failed to fetch Google profile.');
                   } finally {
                     setGoogleLoading(false);
                   }
+                } else {
+                  setGoogleLoading(false);
                 }
               },
             });
             tokenClient.requestAccessToken();
           } else {
             setGoogleLoading(false);
-            setError('Please allow popups or third-party cookies to sign in with Google.');
+            setError('Please allow popups to sign in with Google.');
           }
-        } else {
-          setGoogleLoading(false);
         }
       });
-    } catch {
+    } catch (e) {
+      clearTimeout(clickTimeout);
       setGoogleLoading(false);
-      setError('Google Sign-In encountered an error. Please try again.');
+      console.error('[Q-Med Auth] Google click error:', e);
+      setError('Unable to open Google sign-in window.');
     }
   };
 
@@ -569,6 +640,9 @@ const Login = () => {
               )}
               Continue with Google
             </button>
+
+            {/* Hidden container for official Google Identity Services rendered button */}
+            <div ref={googleBtnContainerRef} style={{ display: 'none' }} />
 
             {/* Disclaimer text */}
             <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', margin: '0 auto', lineHeight: 1.3 }}>
