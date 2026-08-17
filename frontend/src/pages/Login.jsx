@@ -383,26 +383,26 @@ const Login = () => {
       padding: '20px 10px',
       fontFamily: 'var(--font-body)'
     }}>
-      <div className="glass-panel" style={{
+      <div className="glass-panel login-card-container" style={{
         width: '100%',
-        maxWidth: '500px',
-        padding: '32px 28px',
+        maxWidth: '520px',
+        padding: 'clamp(20px, 4vw, 36px) clamp(16px, 3.5vw, 30px)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 22,
+        gap: 'clamp(16px, 2.5vw, 22px)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         boxShadow: '0 16px 40px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Header Branding */}
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <img src="/logo.png" alt="Q-Med Logo" style={{ width: 48, height: 48, objectFit: 'contain' }} className="glow-active" />
-          <h2 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Welcome to Q-Med</h2>
+          <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 1.75rem)', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Welcome to Q-Med</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Hospital Appointment & Queue System</p>
         </div>
 
         {/* ── ONE-CLICK DEMO LOGIN BAR ── */}
         <div style={{
-          padding: '16px',
+          padding: 'clamp(12px, 2vw, 16px)',
           borderRadius: '12px',
           background: 'linear-gradient(135deg, rgba(6,182,212,0.06), rgba(168,85,247,0.06))',
           border: '1px solid rgba(6,182,212,0.2)',
@@ -417,7 +417,7 @@ const Login = () => {
             <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Auto-logs in</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div className="demo-access-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
             {DEMO_ACCOUNTS.map((acc) => {
               const isLoading = quickLoadingRole === acc.role;
               return (

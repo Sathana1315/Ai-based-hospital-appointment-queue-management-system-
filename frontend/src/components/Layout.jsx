@@ -126,19 +126,20 @@ const Layout = ({ children }) => {
 
       {/* ── Navbar ── */}
       <header className="glass-panel" style={{
-        position: 'sticky', top: 15, margin: '15px 20px',
-        padding: '12px 24px',
+        position: 'sticky', top: 10, margin: '10px clamp(8px, 2vw, 20px)',
+        padding: '10px clamp(12px, 2vw, 24px)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        zIndex: 200, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)'
+        zIndex: 200, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)',
+        gap: 12
       }}>
         {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <img src="/logo.png" alt="Q-Med Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} className="glow-active" />
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+            <h1 style={{ fontSize: 'clamp(1.1rem, 2vw, 1.25rem)', fontWeight: 700, fontFamily: 'var(--font-display)', whiteSpace: 'nowrap' }}>
               Q-<span className="text-gradient">Med</span>
             </h1>
-            <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, display: 'block' }}>
               AI Queue Management
             </span>
           </div>
@@ -146,19 +147,19 @@ const Layout = ({ children }) => {
 
         {/* Right side */}
         {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 1.5vw, 14px)', minWidth: 0 }}>
             
             {/* Global Search Bar */}
             {user.role !== 'guest' && (
-              <div style={{ marginRight: 10 }}>
+              <div className="nav-search-container" style={{ width: '100%', maxWidth: 320 }}>
                 <SearchBar onSelect={(item) => console.log('Selected:', item)} />
               </div>
             )}
 
             {/* User badge */}
-            <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', fontSize: '0.85rem', borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.02)' }}>
+            <div className="glass-panel user-role-badge" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', fontSize: '0.85rem', borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.02)', whiteSpace: 'nowrap' }}>
               {getRoleIcon()}
-              <span style={{ fontWeight: 500 }}>{user.username}</span>
+              <span style={{ fontWeight: 500, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.username}</span>
               <span style={{
                 fontSize: '0.7rem', backgroundColor: 'rgba(255,255,255,0.08)',
                 padding: '2px 8px', borderRadius: 10, textTransform: 'capitalize',
@@ -172,7 +173,7 @@ const Layout = ({ children }) => {
             <div ref={notifPanelRef} style={{ position: 'relative' }}>
               <button
                 onClick={toggleNotifs}
-                style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, width: 38, height: 38, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: 'var(--text-secondary)', transition: 'var(--transition-smooth)' }}
+                style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, width: 38, height: 38, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: 'var(--text-secondary)', transition: 'var(--transition-smooth)', flexShrink: 0 }}
                 title="Notifications"
               >
                 <Bell size={16} />
@@ -183,7 +184,7 @@ const Layout = ({ children }) => {
 
               {/* Notification Dropdown */}
               {showNotifs && (
-                <div style={{
+                <div className="notif-dropdown" style={{
                   position: 'absolute', top: 46, right: 0,
                   width: 340, maxHeight: 420,
                   background: 'rgba(13,20,38,0.97)',
@@ -260,7 +261,7 @@ const Layout = ({ children }) => {
             </div>
 
             {/* Logout */}
-            <button onClick={logout} className="btn-secondary" style={{ padding: '8px 12px', borderRadius: '50%', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }} title="Logout">
+            <button onClick={logout} className="btn-secondary" style={{ padding: '8px 12px', borderRadius: '50%', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 38, width: 38, flexShrink: 0 }} title="Logout">
               <LogOut size={16} style={{ color: 'var(--color-danger)' }} />
             </button>
           </div>
@@ -268,12 +269,12 @@ const Layout = ({ children }) => {
       </header>
 
       {/* ── Main ── */}
-      <main style={{ flex: 1, padding: '20px', maxWidth: 1240, margin: '0 auto', width: '100%' }}>
+      <main className="app-container" style={{ flex: 1, padding: 'clamp(12px, 2.5vw, 24px) clamp(10px, 2vw, 20px)', width: '100%' }}>
         {children}
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ textAlign: 'center', padding: '20px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', marginTop: 40 }}>
+      <footer style={{ textAlign: 'center', padding: '20px 16px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', marginTop: 'clamp(20px, 4vw, 40px)' }}>
         © 2026 Q-Med AI Clinic Queue &nbsp;·&nbsp; React + FastAPI + MongoDB Atlas + Groq
       </footer>
     </div>

@@ -4,42 +4,132 @@
   outline-offset: 2px;
 }
 
-/* ── Mobile Responsiveness ─────────────────── */
+/* ── Container Fluidity & Global Utilities ──── */
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+.responsive-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: clamp(10px, 3vw, 24px);
+  overflow-y: auto;
+}
+
+.responsive-modal-content {
+  width: 100%;
+  max-width: min(94vw, 720px);
+  max-height: 90dvh;
+  overflow-y: auto;
+  border-radius: clamp(12px, 2vw, 18px);
+}
+
+/* ── Responsive Media Queries ──────────────── */
+
+/* 1. Large Displays (1920px+) */
+@media (min-width: 1920px) {
+  :root {
+    --container-max-width: 1600px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* 2. Desktop & Small Laptops (1024px - 1440px) */
+@media (max-width: 1280px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  }
+}
+
+/* 3. Tablets (768px - 1023px) */
+@media (max-width: 1023px) {
+  .tablet-col-1 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .tablet-col-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .nav-search-container {
+    max-width: 240px !important;
+  }
+}
+
+/* 4. Mobile & Small Tablets (< 768px) */
 @media (max-width: 768px) {
   body {
     font-size: 14px;
   }
-  
-  .glass-panel {
-    border-radius: 12px;
+
+  header.glass-panel {
+    margin: 8px 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
   }
   
+  .nav-search-container {
+    display: none !important;
+  }
+  
+  .user-role-badge {
+    display: none !important;
+  }
+
   .tab-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 8px; /* space for scrollbar */
+    padding: 3px !important;
+    gap: 3px !important;
+  }
+
+  .tab-btn {
+    padding: 7px 12px !important;
+    font-size: 0.78rem !important;
   }
   
   .stat-card {
-    padding: 16px;
+    padding: 14px !important;
   }
   
   .stat-number {
-    font-size: 1.8rem;
+    font-size: 1.6rem !important;
   }
   
-  /* Layout Grid Overrides */
   .dashboard-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .two-col-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .notif-dropdown {
+    width: min(94vw, 320px) !important;
+    right: -10px !important;
   }
   
   .toast-container {
     top: auto;
-    bottom: 24px;
+    bottom: 20px;
     right: 50%;
     transform: translateX(50%);
     align-items: center;
+    width: calc(100vw - 32px);
   }
   
   @keyframes toast-in-mobile {
@@ -54,39 +144,24 @@
     animation: toast-in-mobile 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
   .toast.exiting { animation: toast-out-mobile 0.3s ease forwards; }
-}
 
-@media (max-width: 480px) {
-  .btn-primary, .btn-secondary, .btn-danger {
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    min-height: 44px; /* 44px touch target */
-  }
-  
-  .form-input {
-    padding: 12px 14px;
-    min-height: 44px; /* 44px touch target */
-  }
-}
-
-/* ── Chatbot Mobile Bottom Sheet ─────────────────── */
-@media (max-width: 768px) {
   .chatbot-panel {
     position: fixed !important;
     bottom: 0 !important;
     right: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 85vh !important;
+    max-width: 100% !important;
+    height: 85dvh !important;
     border-radius: 20px 20px 0 0 !important;
     z-index: 2000;
   }
   
   .chatbot-fab {
-    bottom: 20px !important;
-    right: 20px !important;
-    width: 50px !important;
-    height: 50px !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
   }
 
   .booking-options-grid {
@@ -94,7 +169,7 @@
   }
 
   .dept-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
   }
 
   .summary-grid {
@@ -110,6 +185,30 @@
   }
 }
 
+/* 5. Extra Small Mobile (< 480px) */
+@media (max-width: 480px) {
+  .btn-primary, .btn-secondary, .btn-danger {
+    padding: 9px 14px;
+    font-size: 0.88rem;
+    min-height: 44px;
+  }
+  
+  .form-input {
+    padding: 10px 12px;
+    min-height: 44px;
+    font-size: 0.88rem;
+  }
+
+  .login-card-container {
+    padding: 18px 14px !important;
+    width: 100% !important;
+  }
+
+  .demo-access-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── Professional Prescription Print Media Styles ─────────────────── */
 @media print {
   body {
@@ -119,7 +218,6 @@
     padding: 0 !important;
   }
 
-  /* Hide UI elements on print */
   nav, header, footer, .navbar, .tab-bar, .chatbot-fab, .chatbot-panel, .no-print, .btn-primary, .btn-secondary, button {
     display: none !important;
   }
@@ -137,7 +235,7 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 24px !important;
+    padding: 20px !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
@@ -152,5 +250,6 @@
     display: none !important;
   }
 }
+
 
 
