@@ -157,6 +157,13 @@ async def google_login(body: GoogleLoginRequest):
     existing_user = await users_collection.find_one({"email": google_email})
 
     if existing_user:
+        # Enforce Google Sign-In is ONLY for patient accounts
+        if existing_user.get("role") != "patient":
+            raise HTTPException(
+                status_code=403,
+                detail="Google sign-in is available for patient accounts only. Please use your staff login."
+            )
+
         # Link google_sub if not already linked
         if not existing_user.get("google_sub"):
             await users_collection.update_one(
@@ -173,14 +180,14 @@ async def google_login(body: GoogleLoginRequest):
                     {"$set": {"profile_picture": google_picture}}
                 )
 
-        # Issue JWT for existing user (any role they already have)
+        # Issue JWT for patient
         access_token = create_access_token(
-            data={"sub": existing_user["_id"], "role": existing_user["role"]}
+            data={"sub": existing_user["_id"], "role": "patient"}
         )
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "role": existing_user["role"],
+            "role": "patient",
             "username": existing_user["username"]
         }
 

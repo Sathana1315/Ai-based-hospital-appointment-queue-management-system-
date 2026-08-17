@@ -24,11 +24,15 @@ export const AuthProvider = ({ children }) => {
   const fetchCurrentUser = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/auth/me`);
+      const response = await axios.get(`${API_BASE_URL}/auth/me`, { timeout: 6000 });
       setUser(response.data);
     } catch (error) {
-      console.error('Error fetching current user:', error);
-      logout();
+      console.warn('Could not validate session token, redirecting to login:', error?.message);
+      // Cleanly clear invalid token
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }

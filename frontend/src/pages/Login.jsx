@@ -479,6 +479,15 @@ const Login = () => {
         {/* ── Login Form ── */}
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ textAlign: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                PATIENT LOGIN
+              </span>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                Sign in to your Q-Med patient account
+              </p>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Username or Email</label>
               <input
@@ -505,7 +514,7 @@ const Login = () => {
               />
             </div>
 
-            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '6px', minHeight: '44px' }}>
+            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '4px', minHeight: '44px' }}>
               <LogIn size={18} /> Sign In
             </button>
 
@@ -560,6 +569,11 @@ const Login = () => {
               )}
               Continue with Google
             </button>
+
+            {/* Disclaimer text */}
+            <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', margin: '0 auto', lineHeight: 1.3 }}>
+              Google sign-in is available for patients only.
+            </p>
           </form>
         )}
 
