@@ -60,12 +60,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.0-${{ github.run_number }}
-          name: Release v1.0.0-${{ github.run_number }}
-          body: "Automated production release."
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v1.0.0-${{ github.run_number }}" \
+            --title "Release v1.0.0-${{ github.run_number }}" \
+            --notes "Automated production release." \
+            --generate-notes
+
 
