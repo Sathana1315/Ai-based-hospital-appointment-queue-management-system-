@@ -10,6 +10,7 @@ python-dotenv
 PyJWT
 groq
 httpx
+requests
 email-validator
 python-jose
 faster-whisper
@@ -17,4 +18,5 @@ websockets
 psutil
 google-auth
 google-auth-httplib2
+
  
