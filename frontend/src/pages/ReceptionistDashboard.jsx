@@ -36,11 +36,19 @@ const ReceptionistDashboard = () => {
   // Queue monitor
   const [queueData, setQueueData]       = useState({});
 
-  const refreshRef = useRef(null);
+  const [demoActive, setDemoActive] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchDemoStatus();
   }, []);
+
+  const fetchDemoStatus = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/admin/demo/status`);
+      setDemoActive(res.data?.is_running);
+    } catch { /* silent */ }
+  };
 
   useEffect(() => {
     if (lastMessage) {
@@ -197,9 +205,25 @@ const ReceptionistDashboard = () => {
             Manage appointments, attendance, walk-ins, and queue flow.
           </p>
         </div>
-        <button onClick={fetchData} className="btn-secondary" style={{ fontSize: '0.82rem' }}>
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {demoActive && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+              borderRadius: '20px', fontSize: '0.78rem', fontWeight: 600,
+              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+              color: 'var(--color-success)'
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%', background: '#10b981',
+                boxShadow: '0 0 8px #10b981'
+              }} />
+              ● Demo Simulation Active
+            </div>
+          )}
+          <button onClick={fetchData} className="btn-secondary" style={{ fontSize: '0.82rem' }}>
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Quick stats */}

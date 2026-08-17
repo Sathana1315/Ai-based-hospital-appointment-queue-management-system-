@@ -49,7 +49,31 @@ const AdminDashboard = () => {
 
   const DISTRICTS = ['Central', 'North', 'South', 'East', 'West'];
 
-  useEffect(() => { fetchData(); }, []);
+  const [demoStatus, setDemoStatus] = useState(null);
+  const [demoActionLoading, setDemoActionLoading] = useState(false);
+
+  useEffect(() => { fetchData(); fetchDemoStatus(); }, []);
+
+  const fetchDemoStatus = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/admin/demo/status`);
+      setDemoStatus(res.data);
+    } catch { /* silent */ }
+  };
+
+  const handleToggleSimulation = async (action) => {
+    setDemoActionLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/admin/demo/${action}`);
+      showToast(res.data.message, 'success');
+      setDemoStatus(res.data.status);
+      fetchData();
+    } catch (err) {
+      showToast(err.response?.data?.detail || `Failed to ${action} simulation.`, 'error');
+    } finally {
+      setDemoActionLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -68,6 +92,7 @@ const AdminDashboard = () => {
       setStats(statRes.data);
       setAnalytics(analRes.data);
       setSettings(setRes.data);
+      fetchDemoStatus();
     } catch (err) {
       console.error('Admin load error:', err);
     } finally {
@@ -151,10 +176,74 @@ const AdminDashboard = () => {
             Manage hospitals, doctors, patients, and view analytics.
           </p>
         </div>
-        <button onClick={fetchData} className="btn-secondary" style={{ fontSize: '0.82rem' }}>
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {demoStatus && demoStatus.simulation_enabled && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+              borderRadius: '20px', fontSize: '0.78rem', fontWeight: 600,
+              background: demoStatus.is_running ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${demoStatus.is_running ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              color: demoStatus.is_running ? 'var(--color-success)' : 'var(--color-danger)'
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: demoStatus.is_running ? '#10b981' : '#ef4444',
+                boxShadow: demoStatus.is_running ? '0 0 8px #10b981' : 'none'
+              }} />
+              {demoStatus.is_running ? '● Demo Simulation Active' : '○ Demo Simulation Paused'}
+            </div>
+          )}
+          <button onClick={fetchData} className="btn-secondary" style={{ fontSize: '0.82rem' }}>
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </div>
+
+      {/* Demo Simulation Action Banner */}
+      {demoStatus && demoStatus.simulation_enabled && (
+        <div className="glass-card" style={{
+          padding: '12px 18px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
+          border: '1px solid rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.04)'
+        }}>
+          <div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-accent)' }}>Live Hospital Simulation Engine: </span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Simulating realistic patient flow across {demoStatus.simulated_doctors_count || 4} non-demo specialists. Demo Doctor ({demoStatus.demo_doctor}) is dedicated to real & demo user consultations.
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {demoStatus.is_running ? (
+              <button
+                onClick={() => handleToggleSimulation('stop')}
+                disabled={demoActionLoading}
+                className="btn-secondary"
+                style={{ fontSize: '0.75rem', padding: '6px 12px', borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}
+              >
+                Pause Simulation
+              </button>
+            ) : (
+              <button
+                onClick={() => handleToggleSimulation('start')}
+                disabled={demoActionLoading}
+                className="btn-primary"
+                style={{ fontSize: '0.75rem', padding: '6px 12px' }}
+              >
+                Resume Simulation
+              </button>
+            )}
+            <button
+              onClick={() => handleToggleSimulation('reset')}
+              disabled={demoActionLoading}
+              className="btn-secondary"
+              style={{ fontSize: '0.75rem', padding: '6px 12px' }}
+              title="Safely cleans simulated appointments without touching real user accounts"
+            >
+              Reset Simulation Data
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tab Bar */}
       <div className="tab-bar">

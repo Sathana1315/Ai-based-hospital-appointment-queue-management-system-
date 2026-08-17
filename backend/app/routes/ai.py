@@ -248,13 +248,29 @@ async def book_appointment(user_id: str, doctor_id: str, hospital_id: str, reque
     except:
         return {"error": "Invalid slot format. Must be ISO 8601."}
         
+    from app.config import settings
+    from app.database import users_collection
+
+    target_doctor_id = doctor_id
+    target_hospital_id = hospital_id
+
+    # Check if user is Demo Patient in Demo Mode -> route to Demo Doctor
+    user = await users_collection.find_one({"_id": user_id})
+    if settings.DEMO_MODE and user and user.get("username") == settings.DEMO_PATIENT_USERNAME:
+        demo_doc_user = await users_collection.find_one({"username": settings.DEMO_DOCTOR_USERNAME})
+        if demo_doc_user:
+            demo_doc_prof = await doctors_collection.find_one({"user_id": demo_doc_user["_id"]})
+            if demo_doc_prof:
+                target_doctor_id = str(demo_doc_prof["_id"])
+                target_hospital_id = demo_doc_prof.get("hospital_id", hospital_id)
+
     req_id = str(uuid.uuid4())
     new_request = {
         "_id": req_id,
         "patient_id": user_id,
         "is_guest": False,
-        "doctor_id": doctor_id,
-        "hospital_id": hospital_id,
+        "doctor_id": target_doctor_id,
+        "hospital_id": target_hospital_id,
         "status": "PENDING_DOCTOR_APPROVAL",
         "requested_slot": dt,
         "suggested_slots": [],
@@ -263,13 +279,14 @@ async def book_appointment(user_id: str, doctor_id: str, hospital_id: str, reque
         "priority": "NORMAL",
         "booking_method": "AI_ASSISTANT",
         "rejection_reason": None,
+        "is_demo_simulation": False,
         "created_at": datetime.now(timezone.utc)
     }
     await appointment_requests_collection.insert_one(new_request)
     
     # Fetch doctor and hospital for the response
-    doc = await doctors_collection.find_one({"_id": doctor_id})
-    hosp = await hospitals_collection.find_one({"_id": hospital_id})
+    doc = await doctors_collection.find_one({"_id": target_doctor_id})
+    hosp = await hospitals_collection.find_one({"_id": target_hospital_id})
     
     # Notify doctor if registered user
     if doc and doc.get("user_id"):
@@ -278,13 +295,13 @@ async def book_appointment(user_id: str, doctor_id: str, hospital_id: str, reque
         await _create_notification(
             doc["user_id"],
             "New Appointment Request",
-            f"New AI booking request for {dt.strftime('%Y-%m-%d %H:%M')}.",
+            f"New appointment request from {user.get('username', 'a patient') if user else 'a patient'} for {dt.strftime('%Y-%m-%d %H:%M')}.",
             "info"
         )
         await manager.send_personal_message({
             "type": "NEW_APPOINTMENT_REQUEST",
             "request_id": req_id,
-            "doctor_id": doctor_id,
+            "doctor_id": target_doctor_id,
             "patient_id": user_id
         }, doc["user_id"])
     

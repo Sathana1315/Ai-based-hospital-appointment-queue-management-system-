@@ -102,3 +102,39 @@ async def get_admin_analytics(
         "doctor_workload": doctors,
         "revenue": revenue
     }
+
+
+# ──────────────────────────────────────────────────
+# DEMO SIMULATION CONTROLS
+# ──────────────────────────────────────────────────
+
+@router.get("/demo/status")
+async def get_demo_status(current_user=Depends(require_role(["admin", "receptionist"]))):
+    """Get the current status of the background demo simulation."""
+    from app.demo_simulation import simulation_engine
+    return simulation_engine.get_status()
+
+
+@router.post("/demo/start")
+async def start_demo_simulation(current_user=Depends(require_role(["admin"]))):
+    """Start the background hospital demo simulation engine."""
+    from app.demo_simulation import simulation_engine
+    await simulation_engine.start()
+    return {"message": "Demo simulation started", "status": simulation_engine.get_status()}
+
+
+@router.post("/demo/stop")
+async def stop_demo_simulation(current_user=Depends(require_role(["admin"]))):
+    """Stop the background hospital demo simulation engine."""
+    from app.demo_simulation import simulation_engine
+    await simulation_engine.stop()
+    return {"message": "Demo simulation stopped", "status": simulation_engine.get_status()}
+
+
+@router.post("/demo/reset")
+async def reset_demo_simulation(current_user=Depends(require_role(["admin"]))):
+    """Safely reset and re-seed only simulated records without touching real data."""
+    from app.demo_simulation import simulation_engine
+    await simulation_engine.reset()
+    return {"message": "Demo simulation data reset successfully", "status": simulation_engine.get_status()}
+

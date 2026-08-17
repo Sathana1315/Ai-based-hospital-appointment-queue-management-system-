@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 import uuid
 from datetime import datetime, time, timezone, timedelta
+from app.config import settings
 from app.database import (
     appointment_requests_collection,
     appointments_collection,
@@ -12,6 +13,7 @@ from app.database import (
     hospitals_collection,
     prescriptions_collection,
     notifications_collection,
+    users_collection,
     db
 )
 from app.models.appointment import (
@@ -69,7 +71,19 @@ async def request_appointment(
     role = current_user["role"]
     user_id = current_user["id"]
 
-    doctor = await doctors_collection.find_one({"_id": req.doctor_id})
+    target_doctor_id = req.doctor_id
+    target_hospital_id = req.hospital_id
+
+    # If DEMO_MODE is active and logged-in user is Demo Patient, route to Demo Doctor
+    if settings.DEMO_MODE and (current_user.get("username") == settings.DEMO_PATIENT_USERNAME):
+        demo_doc_user = await users_collection.find_one({"username": settings.DEMO_DOCTOR_USERNAME})
+        if demo_doc_user:
+            demo_doc_prof = await doctors_collection.find_one({"user_id": demo_doc_user["_id"]})
+            if demo_doc_prof:
+                target_doctor_id = str(demo_doc_prof["_id"])
+                target_hospital_id = demo_doc_prof.get("hospital_id", req.hospital_id)
+
+    doctor = await doctors_collection.find_one({"_id": target_doctor_id})
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
 
@@ -78,8 +92,8 @@ async def request_appointment(
         "_id": req_id,
         "patient_id": user_id,
         "is_guest": role == "guest",
-        "doctor_id": req.doctor_id,
-        "hospital_id": req.hospital_id,
+        "doctor_id": target_doctor_id,
+        "hospital_id": target_hospital_id,
         "status": "PENDING_DOCTOR_APPROVAL",
         "requested_slot": req.requested_slot,
         "suggested_slot": None,
@@ -91,6 +105,7 @@ async def request_appointment(
         "age": req.age,
         "gender": req.gender,
         "rejection_reason": None,
+        "is_demo_simulation": False,
         "created_at": datetime.now(timezone.utc)
     }
     await appointment_requests_collection.insert_one(new_request)
@@ -106,7 +121,7 @@ async def request_appointment(
         await manager.send_personal_message({
             "type": "NEW_APPOINTMENT_REQUEST",
             "request_id": req_id,
-            "doctor_id": req.doctor_id,
+            "doctor_id": target_doctor_id,
             "patient_id": user_id
         }, doctor["user_id"])
 
@@ -164,6 +179,7 @@ async def approve_appointment(
         "slot": slot_dt,
         "status": "SCHEDULED",
         "queue_number": queue_number,
+        "is_demo_simulation": False,
         "created_at": datetime.now(timezone.utc)
     }
     await appointments_collection.insert_one(new_app)
@@ -179,7 +195,8 @@ async def approve_appointment(
         "appointment_id": app_id,
         "patient_name": patient_name,
         "queue_number": queue_number,
-        "status": "SCHEDULED"
+        "status": "SCHEDULED",
+        "is_demo_simulation": False
     }
     if not queue_doc:
         await queues_collection.insert_one({

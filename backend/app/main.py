@@ -44,10 +44,17 @@ app.add_middleware(
 os.makedirs("uploads/medical_files", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+from app.demo_simulation import simulation_engine
+
 @app.on_event("startup")
 async def startup_db_client():
     await ping_database()
     await setup_indexes()
+    await simulation_engine.start()
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    await simulation_engine.stop()
 
 # Core routers
 app.include_router(authentication.router)
