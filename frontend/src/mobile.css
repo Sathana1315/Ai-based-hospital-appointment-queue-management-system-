@@ -100,5 +100,57 @@
   .summary-grid {
     grid-template-columns: 1fr !important;
   }
+
+  .prescription-table-container {
+    display: none !important;
+  }
+
+  .prescription-mobile-cards {
+    display: flex !important;
+  }
 }
+
+/* ── Professional Prescription Print Media Styles ─────────────────── */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide UI elements on print */
+  nav, header, footer, .navbar, .tab-bar, .chatbot-fab, .chatbot-panel, .no-print, .btn-primary, .btn-secondary, button {
+    display: none !important;
+  }
+
+  .prescription-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    display: block !important;
+  }
+
+  #printable-prescription {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .prescription-table-container {
+    display: block !important;
+  }
+
+  .prescription-mobile-cards {
+    display: none !important;
+  }
+}
+
 

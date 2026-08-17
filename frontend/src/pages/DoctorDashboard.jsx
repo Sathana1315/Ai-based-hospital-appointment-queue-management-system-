@@ -5,6 +5,7 @@ import { useWebSocket } from '../context/WebSocketContext';
 import axios from 'axios';
 import { SkeletonCard } from '../components/Skeleton';
 import QueueStats from '../components/QueueStats';
+import PrescriptionViewer from '../components/PrescriptionViewer';
 import {
   User, CheckCircle, Stethoscope, Play, AlertTriangle,
   Clock, Plus, Trash2, Send, RefreshCw, Activity,
@@ -18,6 +19,7 @@ const DoctorDashboard = () => {
 
   const [docProfile, setDocProfile]   = useState(null);
   const [docLoading, setDocLoading]   = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState(null);
   const [status, setStatus]           = useState('OFFLINE');
   const [liveQueue, setLiveQueue]     = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
@@ -638,17 +640,34 @@ const DoctorDashboard = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
               {history.map(record => (
                 <div key={record.id} className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>Patient ID: {record.patient_id.slice(-6).toUpperCase()}</p>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(record.date).toLocaleDateString()}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      Patient: {record.patient_name || `ID: ${record.patient_id.slice(-6).toUpperCase()}`}
+                    </p>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {new Date(record.created_at || record.date).toLocaleDateString()}
+                    </span>
                   </div>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}><strong>Notes:</strong> {record.notes}</p>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}><strong>Prescription:</strong> {record.prescriptions}</p>
+                  <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => setSelectedRecord(record)}
+                      className="btn-secondary"
+                      style={{ fontSize: '0.78rem', padding: '6px 14px', gap: 6 }}
+                    >
+                      <FileText size={14} /> View Prescription
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+      )}
+
+      {selectedRecord && (
+        <PrescriptionViewer record={selectedRecord} onClose={() => setSelectedRecord(null)} />
       )}
 
       {/* ── Rejection Reason Modal ── */}
