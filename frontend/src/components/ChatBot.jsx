@@ -61,6 +61,14 @@ const ChatBot = () => {
   }, [lastMessage]);
 
   useEffect(() => {
+    const handleOpenChat = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener('open-chatbot', handleOpenChat);
+    return () => window.removeEventListener('open-chatbot', handleOpenChat);
+  }, []);
+
+  useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }

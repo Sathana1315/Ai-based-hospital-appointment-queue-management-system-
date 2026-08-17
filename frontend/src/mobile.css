@@ -88,4 +88,17 @@
     width: 50px !important;
     height: 50px !important;
   }
+
+  .booking-options-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dept-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
+

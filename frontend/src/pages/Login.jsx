@@ -1,12 +1,63 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, UserPlus, HelpCircle, MapPin } from 'lucide-react';
+import {
+  LogIn, UserPlus, HelpCircle, MapPin, Stethoscope,
+  Shield, User, Sparkles, Loader2, KeyRound, Zap
+} from 'lucide-react';
+
+const DEMO_ACCOUNTS = [
+  {
+    role: 'patient',
+    label: 'Patient',
+    username: 'patient_demo',
+    password: 'patient123',
+    icon: <User size={16} />,
+    color: 'var(--color-accent)',
+    bg: 'rgba(6, 182, 212, 0.1)',
+    border: 'rgba(6, 182, 212, 0.3)',
+    desc: 'Bookings & Queue'
+  },
+  {
+    role: 'doctor',
+    label: 'Doctor',
+    username: 'dr_smith_central',
+    password: 'doctor123',
+    icon: <Stethoscope size={16} />,
+    color: '#38bdf8',
+    bg: 'rgba(56, 189, 248, 0.1)',
+    border: 'rgba(56, 189, 248, 0.3)',
+    desc: 'Appointments & Consult'
+  },
+  {
+    role: 'receptionist',
+    label: 'Receptionist',
+    username: 'receptionist',
+    password: 'staff123',
+    icon: <Shield size={16} />,
+    color: 'var(--color-success)',
+    bg: 'rgba(16, 185, 129, 0.1)',
+    border: 'rgba(16, 185, 129, 0.3)',
+    desc: 'Queue & Approvals'
+  },
+  {
+    role: 'admin',
+    label: 'Admin',
+    username: 'admin',
+    password: 'admin123',
+    icon: <KeyRound size={16} />,
+    color: '#c084fc',
+    bg: 'rgba(192, 132, 252, 0.1)',
+    border: 'rgba(192, 132, 252, 0.3)',
+    desc: 'System & Analytics'
+  }
+];
 
 const Login = () => {
   const { login, register, initGuest } = useAuth();
   const [activeTab, setActiveTab] = useState('login'); // login | register | guest
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [quickLoadingRole, setQuickLoadingRole] = useState(null);
 
   // Login form state
   const [loginUser, setLoginUser] = useState('');
@@ -27,7 +78,7 @@ const Login = () => {
   const [guestDistrict, setGuestDistrict] = useState('Central');
 
   const handleLoginSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
     if (!loginUser || !loginPass) {
       setError('Please fill in all fields');
@@ -36,6 +87,40 @@ const Login = () => {
     const result = await login(loginUser, loginPass);
     if (!result.success) {
       setError(result.error);
+    }
+  };
+
+  const handleQuickLogin = async (acc) => {
+    setError('');
+    setSuccessMsg('');
+    setQuickLoadingRole(acc.role);
+    setLoginUser(acc.username);
+    setLoginPass(acc.password);
+    try {
+      const result = await login(acc.username, acc.password);
+      if (!result.success) {
+        setError(result.error);
+      }
+    } catch {
+      setError('Quick login failed.');
+    } finally {
+      setQuickLoadingRole(null);
+    }
+  };
+
+  const handleQuickGuest = async () => {
+    setError('');
+    setSuccessMsg('');
+    setQuickLoadingRole('guest');
+    try {
+      const result = await initGuest('Central');
+      if (!result.success) {
+        setError(result.error);
+      }
+    } catch {
+      setError('Guest login failed.');
+    } finally {
+      setQuickLoadingRole(null);
     }
   };
 
@@ -92,24 +177,113 @@ const Login = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '80vh',
+      minHeight: '85vh',
       width: '100%',
+      padding: '20px 10px',
       fontFamily: 'var(--font-body)'
     }}>
       <div className="glass-panel" style={{
         width: '100%',
-        maxWidth: '480px',
-        padding: '36px',
+        maxWidth: '500px',
+        padding: '32px 28px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 24,
-        border: '1px solid rgba(255, 255, 255, 0.08)'
+        gap: 22,
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 16px 40px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Header Branding */}
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <img src="/logo.png" alt="Q-Med Logo" style={{ width: 48, height: 48, objectFit: 'contain' }} className="glow-active" />
-          <h2 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Welcome to Q-Med</h2>
+          <h2 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>Welcome to Q-Med</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Hospital Appointment & Queue System</p>
+        </div>
+
+        {/* ── ONE-CLICK DEMO LOGIN BAR ── */}
+        <div style={{
+          padding: '16px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.06), rgba(168,85,247,0.06))',
+          border: '1px solid rgba(6,182,212,0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Zap size={14} /> One-Click Demo Access
+            </span>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Auto-logs in</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {DEMO_ACCOUNTS.map((acc) => {
+              const isLoading = quickLoadingRole === acc.role;
+              return (
+                <button
+                  key={acc.role}
+                  type="button"
+                  onClick={() => handleQuickLogin(acc)}
+                  disabled={quickLoadingRole !== null}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: `1px solid ${acc.border}`,
+                    background: acc.bg,
+                    color: '#fff',
+                    cursor: quickLoadingRole !== null ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'left',
+                    minHeight: '44px'
+                  }}
+                  className="glow-active"
+                  title={`Login as ${acc.label} (${acc.username})`}
+                >
+                  <div style={{ color: acc.color, display: 'flex', alignItems: 'center' }}>
+                    {isLoading ? <Loader2 size={16} className="spin" /> : acc.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.82rem', fontWeight: 700, lineHeight: 1.2, color: acc.color }}>
+                      {acc.label}
+                    </p>
+                    <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {acc.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Instant Guest Demo Button */}
+          <button
+            type="button"
+            onClick={handleQuickGuest}
+            disabled={quickLoadingRole !== null}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px dashed rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.03)',
+              color: 'var(--text-secondary)',
+              cursor: quickLoadingRole !== null ? 'not-allowed' : 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              minHeight: '38px',
+              transition: 'all 0.2s'
+            }}
+          >
+            {quickLoadingRole === 'guest' ? <Loader2 size={14} className="spin" /> : <HelpCircle size={14} />}
+            Instant Guest Session (No account needed)
+          </button>
         </div>
 
         {/* Tab Selection */}
@@ -136,10 +310,11 @@ const Login = () => {
                 fontWeight: 600,
                 fontSize: '0.85rem',
                 textTransform: 'capitalize',
-                transition: 'var(--transition-smooth)'
+                transition: 'var(--transition-smooth)',
+                minHeight: '38px'
               }}
             >
-              {tab === 'guest' ? 'Guest Booking' : tab}
+              {tab === 'guest' ? 'Custom Guest' : tab}
             </button>
           ))}
         </div>
@@ -171,18 +346,19 @@ const Login = () => {
           </div>
         )}
 
-        {/* Login Form */}
+        {/* ── Login Form ── */}
         {activeTab === 'login' && (
-          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Username or Email</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Enter your username or email"
+                placeholder="Enter username or email"
                 value={loginUser}
                 onChange={(e) => setLoginUser(e.target.value)}
                 required
+                style={{ minHeight: '44px' }}
               />
             </div>
 
@@ -195,24 +371,21 @@ const Login = () => {
                 value={loginPass}
                 onChange={(e) => setLoginPass(e.target.value)}
                 required
+                style={{ minHeight: '44px' }}
               />
             </div>
 
-            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '10px' }}>
+            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '6px', minHeight: '44px' }}>
               <LogIn size={18} /> Sign In
             </button>
-
-            <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Test Credentials: receptionist / staff123 (Receptionist) | dr_smith / doctor123 (Doctor)
-            </div>
           </form>
         )}
 
-        {/* Register Form */}
+        {/* ── Register Form ── */}
         {activeTab === 'register' && (
-          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Username</label>
+          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Username</label>
               <input
                 type="text"
                 className="form-input"
@@ -220,11 +393,12 @@ const Login = () => {
                 value={regUser}
                 onChange={(e) => setRegUser(e.target.value)}
                 required
+                style={{ minHeight: '40px' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Email Address</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Email Address</label>
               <input
                 type="email"
                 className="form-input"
@@ -232,11 +406,12 @@ const Login = () => {
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
                 required
+                style={{ minHeight: '40px' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Password</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Password</label>
               <input
                 type="password"
                 className="form-input"
@@ -244,16 +419,17 @@ const Login = () => {
                 value={regPass}
                 onChange={(e) => setRegPass(e.target.value)}
                 required
+                style={{ minHeight: '40px' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Role Type</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Role Type</label>
               <select
                 className="form-input"
                 value={regRole}
                 onChange={(e) => setRegRole(e.target.value)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', minHeight: '40px' }}
               >
                 <option value="patient">Patient</option>
                 <option value="doctor">Doctor</option>
@@ -262,48 +438,52 @@ const Login = () => {
               </select>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Full Name</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Full Name</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Dr. or Patient Full Name"
+                placeholder="Full Name"
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
                 required
+                style={{ minHeight: '40px' }}
               />
             </div>
 
             {regRole === 'patient' && (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Contact Phone</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Contact Phone</label>
                   <input
                     type="tel"
                     className="form-input"
                     placeholder="Enter phone number"
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
+                    style={{ minHeight: '40px' }}
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Age</label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Age</label>
                     <input
                       type="number"
                       className="form-input"
                       placeholder="Age"
                       value={regAge}
                       onChange={(e) => setRegAge(e.target.value)}
+                      style={{ minHeight: '40px' }}
                     />
                   </div>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Gender</label>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Gender</label>
                     <select
                       className="form-input"
                       value={regGender}
                       onChange={(e) => setRegGender(e.target.value)}
+                      style={{ minHeight: '40px' }}
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -312,12 +492,13 @@ const Login = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>District (Location)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>District (Location)</label>
                   <select
                     className="form-input"
                     value={regDistrict}
                     onChange={(e) => setRegDistrict(e.target.value)}
+                    style={{ minHeight: '40px' }}
                   >
                     {districts.map((d) => (
                       <option key={d} value={d}>{d}</option>
@@ -327,17 +508,17 @@ const Login = () => {
               </>
             )}
 
-            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '10px' }}>
+            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '6px', minHeight: '44px' }}>
               <UserPlus size={18} /> Complete Registration
             </button>
           </form>
         )}
 
-        {/* Guest Booking Mode */}
+        {/* ── Guest Booking Mode ── */}
         {activeTab === 'guest' && (
-          <form onSubmit={handleGuestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <form onSubmit={handleGuestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              If you don't want to create an account, you can book an appointment instantly using a temporary guest session. Your session expires after 24 hours.
+              If you don't want to create an account, you can initialize a temporary guest session for instant hospital booking.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -348,7 +529,7 @@ const Login = () => {
                 className="form-input"
                 value={guestDistrict}
                 onChange={(e) => setGuestDistrict(e.target.value)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', minHeight: '44px' }}
               >
                 {districts.map((d) => (
                   <option key={d} value={d}>{d} District</option>
@@ -356,8 +537,8 @@ const Login = () => {
               </select>
             </div>
 
-            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '10px' }}>
-              <HelpCircle size={18} /> Initialize Guest Session
+            <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: '6px', minHeight: '44px' }}>
+              <HelpCircle size={18} /> Start Guest Session
             </button>
           </form>
         )}
