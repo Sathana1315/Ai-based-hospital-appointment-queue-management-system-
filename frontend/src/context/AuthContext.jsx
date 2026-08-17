@@ -3,7 +3,21 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// In production, use VITE_API_URL from environment; fallback to origin or localhost for local dev
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+  // If running on localhost/127.0.0.1 in dev
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://127.0.0.1:8000';
+  }
+  // Otherwise default to current origin (or same-host backend)
+  return typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -27,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API_BASE_URL}/auth/me`, { timeout: 6000 });
       setUser(response.data);
     } catch (error) {
-      console.warn('Could not validate session token, redirecting to login:', error?.message);
+      console.warn('[Q-Med Auth] Session token validation failed, redirecting to login:', error?.message);
       // Cleanly clear invalid token
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
@@ -39,17 +53,37 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (usernameOrEmail, password) => {
+    console.log(`[Q-Med Auth] Attempting login to ${API_BASE_URL}/auth/login for user: ${usernameOrEmail}`);
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         username_or_email: usernameOrEmail,
         password: password,
+      }, {
+        timeout: 10000
       });
       const { access_token, role, username } = response.data;
+      console.log(`[Q-Med Auth] Login successful. Role: ${role}, User: ${username}`);
       localStorage.setItem('token', access_token);
       setToken(access_token);
       return { success: true, role };
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Login failed';
+      console.error('[Q-Med Auth] Login request failed:', {
+        url: `${API_BASE_URL}/auth/login`,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        code: error.code,
+        message: error.message,
+        detail: error.response?.data?.detail
+      });
+
+      let errorMsg = 'Login failed. Please check your credentials.';
+      if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMsg = 'Server response timed out. Please check your connection and try again.';
+      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+        errorMsg = `Cannot connect to server at ${API_BASE_URL}. Please verify your backend deployment.`;
+      }
       return { success: false, error: errorMsg };
     }
   };

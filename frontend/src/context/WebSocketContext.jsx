@@ -22,10 +22,18 @@ export const WebSocketProvider = ({ children }) => {
         const connect = () => {
             if (ws && ws.readyState !== WebSocket.CLOSED) return;
 
-            // Determine WS URL based on current window location
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Use environment variable if available, else fallback to standard port
-            const wsUrl = `${protocol}//localhost:8000/ws${token ? `?token=${token}` : ''}`;
+            // Determine WS URL based on environment or current window location
+            let wsUrl = '';
+            const envWs = import.meta.env.VITE_WS_URL;
+            if (envWs && typeof envWs === 'string' && envWs.trim().length > 0) {
+                wsUrl = `${envWs.trim().replace(/\/+$/, '')}${token ? `?token=${token}` : ''}`;
+            } else {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                    ? '127.0.0.1:8000'
+                    : window.location.host;
+                wsUrl = `${protocol}//${host}/ws${token ? `?token=${token}` : ''}`;
+            }
             
             ws = new WebSocket(wsUrl);
 
