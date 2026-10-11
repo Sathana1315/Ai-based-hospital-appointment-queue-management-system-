@@ -139,7 +139,12 @@ class HospitalSimulationEngine:
             if not doc:
                 continue
 
-            q = await queues_collection.find_one({"doctor_id": doc_id, "date": today_str})
+            q = await queues_collection.find_one({"doctor_id": doc_id})
+            if q and q.get("date") != today_str:
+                q["date"] = today_str
+                q["active_appointments"] = []
+                q["current_serving_index"] = -1
+
             existing_sim = [a for a in (q.get("active_appointments", []) if q else []) if a.get("is_demo_simulation", False)]
             
             if len(existing_sim) >= 2:
@@ -194,6 +199,7 @@ class HospitalSimulationEngine:
                 await queues_collection.update_one(
                     {"_id": q["_id"]},
                     {"$set": {
+                        "date": today_str,
                         "active_appointments": active_list,
                         "current_serving_index": 0 if q.get("current_serving_index", -1) < 0 else q["current_serving_index"]
                     }}
